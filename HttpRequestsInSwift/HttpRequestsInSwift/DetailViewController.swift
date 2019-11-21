@@ -36,15 +36,15 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
         // Do any additional setup after loading the view, typically from a nib.
         if detailItem==0
         {
-            self.callSynchronous("http://api.shephertz.com")
+            self.callSynchronous(urlString: "http://api.shephertz.com")
         }
         else if detailItem == 1
         {
-            self.callAsynchronous("http://api.shephertz.com")
+            self.callAsynchronous(urlString: "http://api.shephertz.com")
         }
         else
         {
-            self.callAsyncWithCompletionHandler("http://api.shephertz.com")
+            self.callAsyncWithCompletionHandler(urlString: "http://api.shephertz.com")
         }
         //self.configureView()
     }
@@ -64,28 +64,27 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
         print("callAsyncWithCompletionHandler")
         
         let url = NSURL(string: urlString)// Creating URL
-        let request = NSURLRequest(URL:url!)// Creating Http Request
+        let request = NSURLRequest(url:url! as URL)// Creating Http Request
         
         // Creating NSOperationQueue to which the handler block is dispatched when the request completes or failed
-        let queue: NSOperationQueue = NSOperationQueue()
+        let queue: OperationQueue = OperationQueue()
         
         // Sending Asynchronous request using NSURLConnection
-        NSURLConnection.sendAsynchronousRequest(request, queue: queue, completionHandler:{(response:NSURLResponse?, responseData:NSData?, error: NSError?) ->Void in
+        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: queue, completionHandler:{(response:URLResponse?, responseData:Data?, error: Error?) ->Void in
             
             if error != nil
             {
-                print(error!.description)
-                dispatch_async(dispatch_get_main_queue(),{
-                    
+                print(error)
+                DispatchQueue.main.async(execute: {
                     self.removeActivityIndicator()
+
                 })
             }
             else
             {
-                let responseStr:NSString = NSString(data:responseData!, encoding:NSUTF8StringEncoding)!
-                dispatch_async(dispatch_get_main_queue(),{
-                    
-                    self.createWebViewLoadHTMLString(responseStr);
+                let responseStr:String = "sjdhjs sdhjs sdhjshd jsdhjsh"//NSString(data:responseData!, encoding:String.Encoding.utf8.rawValue)!
+                DispatchQueue.main.async(execute: {
+                    self.createWebViewLoadHTMLString(htmlString: responseStr);
                 })
             }
         })
@@ -99,16 +98,16 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
     {
         //let urlString = "Your_URL_Here"
         let url = NSURL(string: urlString)// Creating URL
-        let request = NSURLRequest(URL: url!) // Creating Http Request
+        let request = NSURLRequest(url: url! as URL) // Creating Http Request
         
-        let response: AutoreleasingUnsafeMutablePointer<NSURLResponse?>=nil
+        var response: AutoreleasingUnsafeMutablePointer<URLResponse?>?
 
         // Sending Synchronous request using NSURLConnection
         do {
-            let responseData = try NSURLConnection.sendSynchronousRequest(request, returningResponse: response)
+            let responseData = try NSURLConnection.sendSynchronousRequest(request as URLRequest, returning: response)
             //Converting data to String
-            let responseStr:NSString = NSString(data:responseData, encoding:NSUTF8StringEncoding)!
-            self.createWebViewLoadHTMLString(responseStr);
+            let responseStr:String = String(data:responseData, encoding:.utf8)!
+            self.createWebViewLoadHTMLString(htmlString: responseStr as String);
         } catch (let e) {
             print(e)
             self.removeActivityIndicator()
@@ -124,12 +123,12 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
         
         NSLog("connectWithUrl")
         let url = NSURL(string: urlString)// Creating URL
-        let request = NSURLRequest(URL: url!)// Creating Http Request
+        let request = NSURLRequest(url: url! as URL)// Creating Http Request
         //Making request
-        NSURLConnection(request: request, delegate: self, startImmediately: true)
+        NSURLConnection(request: request as URLRequest, delegate: self, startImmediately: true)
     }
     
-    func connection(connection: NSURLConnection, didReceiveResponse response: NSURLResponse)
+    func connection(connection: NSURLConnection, didReceiveResponse response: URLResponse)
     {
         //Will be called when
         NSLog("didReceiveResponse")
@@ -138,15 +137,15 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
     func connection(connection: NSURLConnection, didReceiveData _data: NSData)
     {
         NSLog("didReceiveData")
-        self.data.appendData(_data)
+        self.data.append(_data as Data)
     }
     
     func connectionDidFinishLoading(connection: NSURLConnection)
     {
         NSLog("connectionDidFinishLoading")
         
-        let responseStr:NSString = NSString(data:self.data, encoding:NSUTF8StringEncoding)!
-        self.createWebViewLoadHTMLString(responseStr);
+        let responseStr:NSString = NSString(data:self.data as Data, encoding:String.Encoding.utf8.rawValue)!
+        self.createWebViewLoadHTMLString(htmlString: responseStr as String);
     }
     
     func connection(connection: NSURLConnection, didFailWithError error: NSError)
@@ -160,9 +159,9 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
      * ------------------ Create WebView and load HTML contents ----------------------------
      */
     
-    func createWebViewLoadHTMLString(htmlString:NSString)
+    func createWebViewLoadHTMLString(htmlString:String)
     {
-        let applicationFrame:CGRect = UIScreen.mainScreen().bounds
+        let applicationFrame:CGRect = UIScreen.main.bounds
         
         
         let webView:UIWebView = UIWebView(frame: applicationFrame)
@@ -171,10 +170,10 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
         
         if activityIndicator != nil
         {
-            self.view.bringSubviewToFront(activityIndicator!)
+            self.view.bringSubview(toFront: activityIndicator!)
         }
         
-        webView.loadHTMLString(htmlString as String, baseURL: nil)
+        webView.loadHTMLString(htmlString, baseURL: nil)
     }
     
     /**
@@ -203,7 +202,7 @@ class DetailViewController: UIViewController, UIWebViewDelegate,NSURLConnectionD
     
     func showActivityIndicator()
     {
-        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle:UIActivityIndicatorViewStyle.Gray)
+        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle:UIActivityIndicatorViewStyle.gray)
         activityIndicator!.center = self.view.center
         //activityIndicator!.hidesWhenStopped = true
         self.view.addSubview(activityIndicator!)
